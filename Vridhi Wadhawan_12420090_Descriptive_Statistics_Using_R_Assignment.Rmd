@@ -1,0 +1,280 @@
+---
+output:
+  pdf_document: default
+  html_document: default
+---
+#Descriptive Statistics Using R
+#Assignment
+#Batch 23
+#Analyzing Flight Data to Derive Business Insights
+#Annswers
+#By
+#Vridhi Wadhawan (12420090)
+
+#Installing & Loading Packages
+```{r}
+#Installing packages & Load Required Packages
+install.packages("nycflights13")
+install.packages("ggplot2")
+install.packages("dplyr")
+library(nycflights13)
+library(ggplot2)
+library(dplyr)
+#To Explore the dataset 'flights'
+?flights
+str(flights)
+summary(flights)  
+```
+
+#Question 1
+```{r}
+#Q1
+# (a) Compute the mean and median departure delay for each airline
+mean_dep_delay <- mean(flights$dep_delay, na.rm = TRUE)
+mean_dep_delay
+median_dep_delay <- median(flights$dep_delay, na.rm = TRUE)
+median_dep_delay
+airline_delays <- group_by(flights, carrier)
+airline_delays <- summarise(airline_delays,
+                            mean_dep_delay = mean(dep_delay, na.rm = TRUE),
+                            median_dep_delay = median(dep_delay, na.rm = TRUE),
+                            total_flights = n())
+airline_delays <- left_join(airline_delays, 
+                            airlines, by = c("carrier" = "carrier"))
+airline_delays
+# (b) Rank airlines from best to worst in terms of on-time departures
+airline_ranked <- arrange(airline_delays, mean_dep_delay)
+airline_ranked
+
+## visualizations
+# Bar chart comparing mean & median delays
+Mean_Departure_Delay_Airline <- barplot(height = airline_delays$mean_dep_delay,
+        names.arg = airline_delays$carrier,
+        col = "lightblue",
+        main = "Mean Departure Delay by Airline",
+        xlab = "Airline",
+        ylab = "Mean Delay (minutes)")
+Median_Departure_Delay_Airline <- barplot(height = airline_delays$median_dep_delay,
+        names.arg = airline_delays$carrier,
+        col = "lightcoral",
+        main = "Median Departure Delay by Airline",
+        xlab = "Airline",
+        ylab = "Median Delay (minutes)")
+# Boxplot showing delay distribution per airline with outliers
+Departure_Delay_Distribution_Airline <- boxplot(dep_delay ~ carrier, data = flights,
+                                                main = "Departure Delay Distribution by Airline",
+                                                xlab = "Airline",
+                                                ylab = "Departure Delay (minutes)",
+                                                col = c("lightgreen"),
+                                                outline = TRUE,
+                                                border = "black")
+# Boxplot for better readability without outliers
+Departure_Delay_Distribution_Airline_Read<- boxplot(dep_delay ~ carrier, 
+                                                    data = flights,
+                                                    main = "Departure Delay Distribution by Airline",
+                                                    xlab = "Airline",   
+                                                    ylab = "Departure Delay (minutes)",
+                                                    col = c("lightgreen"),        
+                                                    outline = FALSE, 
+                                                    border = "black")
+```
+#Question 2
+```{r}
+#Q2
+#(a) Compare the average departure delay for flights from JFK, LGA, and EWR.
+# Filter flights for the three main airports
+jfk_flights <- subset(flights, origin == "JFK")
+jfk_flights
+lga_flights <- subset(flights, origin == "LGA")
+lga_flights
+ewr_flights <- subset(flights, origin == "EWR")
+ewr_flights
+# Computing mean and median departure delays
+jfk_delay <- mean(jfk_flights$dep_delay, na.rm = TRUE)
+jfk_delay
+lga_delay <- mean(lga_flights$dep_delay, na.rm = TRUE)
+lga_delay
+ewr_delay <- mean(ewr_flights$dep_delay, na.rm = TRUE)
+ewr_delay
+jfk_median <- median(jfk_flights$dep_delay, na.rm = TRUE)
+jfk_median
+lga_median <- median(lga_flights$dep_delay, na.rm = TRUE)
+lga_median
+ewr_median <- median(ewr_flights$dep_delay, na.rm = TRUE)
+ewr_median
+# Store in a data frame
+airport_delays <- data.frame(Airport = c("JFK", "LGA", "EWR"),
+                             Mean_Delay = c(jfk_delay, lga_delay, ewr_delay),
+                             Median_Delay = c(jfk_median, lga_median, ewr_median))
+airport_delays
+# (b) Create a boxplot to visualize differences between airports without outliers
+Mean_Departure_Delay_Airport <- boxplot(dep_delay ~ origin, 
+                                        data = flights, 
+                                        col = c("lightblue", "lightcoral", "lightgreen"),
+                                        main = "Departure Delays by Airport",  
+                                        xlab = "Airport", 
+                                        ylab = "Departure Delay (minutes)",
+                                        outline = TRUE)
+#Boxplot without outliers for better readability
+Mean_Departure_Delay_Airport_Read <- boxplot(dep_delay ~ origin, 
+                                        data = flights, 
+                                        col = c("lightblue", "lightcoral", "lightgreen"),
+                                        main = "Departure Delays by Airport",  
+                                        xlab = "Airport", 
+                                        ylab = "Departure Delay (minutes)",
+                                        outline = FALSE)
+```
+#Question 3
+```{r}
+#Q3
+#(a) Calculate the average departure delay for each month
+# Create a table to store monthly delays
+monthly_delays <- data.frame(Month = 1:12, 
+                             Mean_Delay = numeric(12),
+                             Median_Delay = numeric(12))
+# Loop through each month and calculate delays
+for (i in 1:12) {
+  month_flights <- subset(flights, month == i)
+  monthly_delays$Mean_Delay[i] <- mean(month_flights$dep_delay, na.rm = TRUE)
+  monthly_delays$Median_Delay[i] <- median(month_flights$dep_delay, na.rm = TRUE)}
+monthly_delays
+#(b) Plot delays over the months to observe trends.
+# Line plot for mean departure delay
+Mean_Departure_Delay_LinePlot <- plot(monthly_delays$Month, 
+                                      monthly_delays$Mean_Delay, 
+                                      type = "o",
+                                      col = "blue", 
+                                      xlab = "Month", 
+                                      ylab = "Mean Delay (minutes)",
+                                      main = "Mean Departure Delay by Month")
+# Line plot for median departure delay
+Median_Departure_Delay_LinePlot <- plot(monthly_delays$Month, 
+                                        monthly_delays$Median_Delay, 
+                                        type = "o",
+                                        col = "red", 
+                                        xlab = "Month", 
+                                        ylab = "Median Delay (minutes)",
+                                        main = "Median Departure Delay by Month")
+```
+#Question 4
+```{r}
+#Q4
+#(a) Group flights by departure hour and compute the average delay for each.
+# Create a table to store hourly delays
+hourly_delays <- data.frame(Hour = 0:23,
+                            Mean_Delay = numeric(24),
+                            Median_Delay = numeric(24))
+# Loop through each hour and calculate delays
+for (i in 0:23) {hour_flights <- subset(flights, hour == i)
+  hourly_delays$Mean_Delay[i + 1] <- mean(hour_flights$dep_delay, na.rm = TRUE)
+  hourly_delays$Median_Delay[i + 1] <- median(hour_flights$dep_delay, na.rm = TRUE)}
+hourly_delays
+#(b) Create a line plot showing how delays change throughout the day.
+# Line plot for mean departure delay
+Line_Plot_Mean_Departure_Delay_Hour <- plot(hourly_delays$Hour, 
+                                            hourly_delays$Mean_Delay, 
+                                            type = "o", 
+                                            col = "blue", 
+                                            xlab = "Hour of the Day", 
+                                            ylab = "Mean Delay (minutes)",
+                                            main = "Mean Departure Delay by Hour")
+# Line plot for median departure delay
+Line_Plot_Median_Departure_Delay_Hour <- plot(hourly_delays$Hour, 
+                                              hourly_delays$Median_Delay, 
+                                              type = "o",
+                                              col = "red", 
+                                              xlab = "Hour of the Day", 
+                                              ylab = "Median Delay (minutes)",
+                                              main = "Median Departure Delay by Hour")
+```
+#Question 5
+```{r}
+#Q5
+# (a) Calculate the correlation between flight distance and departure delay
+Distance_Departure_Correlation <- cor(flights$distance, 
+                                       flights$dep_delay, 
+                                       use = "complete.obs")
+Distance_Departure_Correlation
+print(paste("Correlation between distance and departure delay: ", Distance_Departure_Correlation))
+# (b) Create a scatterplot to visualize the relationship
+Distance_Departure_Scatterplot <- ggplot(flights,               
+                                         aes(x = distance,
+                                             y = dep_delay,
+                                             col = "green")) +
+  geom_point(color = "green",
+             alpha = 0.5) +   
+  labs(title = "Scatterplot of Flight Distance vs. Departure Delay",       
+       x = "Flight Distance (miles)",       
+       y = "Departure Delay (minutes)")
+scatterplot
+```
+#Question 6
+```{r}
+#Q6
+# (a) Compute the ratio of air time to distance for each airline.
+airline_efficiency <- data.frame(carrier = character(), 
+                                 avg_air_time_per_mile = numeric())
+for (carrier in unique(flights$carrier)) {
+  carrier_data <- flights[flights$carrier == carrier, ]
+  carrier_data$air_time_per_mile <- carrier_data$air_time / carrier_data$distance
+  avg_air_time_per_mile <- mean(carrier_data$air_time_per_mile, na.rm = TRUE)
+  airline_efficiency <- rbind(airline_efficiency, 
+                              data.frame(carrier = carrier, 
+                                         avg_air_time_per_mile = avg_air_time_per_mile))}
+Avg_Air_Time_Airline_Efficiency <- merge(airline_efficiency, 
+                                 airlines[, c("carrier", "name")], 
+                                 by = "carrier")
+Avg_Air_Time_Airline_Efficiency
+# (b) Identify which airline flies the most efficiently (shortest time per mile)
+airline_efficiency <- data.frame(carrier = character(), 
+                                 avg_air_time_per_mile = numeric())
+for (carrier in unique(flights$carrier)) {
+  carrier_data <- flights[flights$carrier == carrier, ]
+  carrier_data$air_time_per_mile <- carrier_data$air_time / carrier_data$distance
+  avg_air_time_per_mile <- mean(carrier_data$air_time_per_mile, na.rm = TRUE)
+  airline_efficiency <- rbind(airline_efficiency, 
+                              data.frame(carrier = carrier, 
+                                         avg_air_time_per_mile = avg_air_time_per_mile))}
+airline_efficiency <- merge(airline_efficiency, airlines, by = "carrier")
+airline_efficiency
+sorted_airline_efficiency <- airline_efficiency[order(airline_efficiency$avg_air_time_per_mile), ]
+sorted_airline_efficiency
+most_efficient_airline <- sorted_airline_efficiency[1, ]
+most_efficient_airline
+most_efficient_airline_name <- sorted_airline_efficiency$name[1]
+most_efficient_airline_name
+most_efficient_time <- most_efficient_airline$avg_air_time_per_mile
+most_efficient_time
+print(paste("The most efficient airline is",most_efficient_airline_name, 
+            "with an average time of", most_efficient_time, "minutes per mile"))
+# Visualize
+# Create a bar plot to compare the air time per mile for each airline
+Airline_Air_Time_per_mile <- barplot(airline_efficiency$avg_air_time_per_mile,
+                                     names.arg = airline_efficiency$carrier,
+                                     col = "lightgreen",
+                                     main = "Average Air Time per Mile by Airline",
+                                     xlab = "Airline",
+                                     ylab = "Average Air Time per Mile (minutes)")
+```
+#Question 7
+```{r}
+#Q7
+airline_delays <- data.frame(carrier = unique(flights$carrier), 
+                             mean_dep_delay = NA, 
+                             median_dep_delay = NA)
+for (carrier in airline_delays$carrier) {
+  carrier_data <- flights[flights$carrier == carrier, ]
+  airline_delays[airline_delays$carrier == carrier, "mean_dep_delay"] <- mean(carrier_data$dep_delay, na.rm = TRUE)
+  airline_delays[airline_delays$carrier == carrier, "median_dep_delay"] <- median(carrier_data$dep_delay, na.rm = TRUE)
+}
+airline_delays <- merge(airline_delays, airlines[, c("carrier", "name")], by = "carrier")
+airline_delays
+ranked_airlines <- airline_delays[order(airline_delays$mean_dep_delay), ]
+ranked_airlines
+best_airline <- ranked_airlines[1, ]
+best_airline
+print(paste("The best airline for a business traveler who values punctuality is", 
+            best_airline$name, "with an average departure delay of", 
+            best_airline$mean_dep_delay,"minutes and a median delay of", 
+            best_airline$median_dep_delay, "minutes."))
+```
